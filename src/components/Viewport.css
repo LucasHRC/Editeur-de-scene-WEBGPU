@@ -1,0 +1,124 @@
+.viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.viewport-canvas {
+  display: block;
+}
+
+.viewport-overlay {
+  position: absolute;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+.viewport-overlay.top-left {
+  top: 12px;
+  left: 12px;
+}
+
+.viewport-overlay.top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.viewport-overlay.bottom-left {
+  bottom: 12px;
+  left: 12px;
+}
+
+.viewport-overlay.bottom-right {
+  bottom: 12px;
+  right: 12px;
+}
+
+.fps-counter {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-weight: 500;
+}
+
+.paused-indicator {
+  margin-top: 4px;
+  padding: 2px 6px;
+  background: rgba(255, 59, 48, 0.8);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.scene-info {
+  opacity: 0.8;
+}
+
+.controls-hint {
+  opacity: 0.6;
+  font-size: 11px;
+}
+
+.viewport-loading,
+.viewport-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.viewport-error {
+  color: #ff6b6b;
+}
+
+.viewport-overlay.hover-hint {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.75);
+  padding: 6px 12px;
+  animation: hoverHintIn 0.15s ease-out;
+}
+
+@keyframes hoverHintIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.hover-object-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+

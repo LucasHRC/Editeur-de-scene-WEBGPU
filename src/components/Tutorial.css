@@ -1,0 +1,262 @@
+.tutorial-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: tutorial-fadeIn 0.3s ease-out;
+  pointer-events: none; /* Ne bloque pas les interactions, sauf le dialog */
+}
+
+.tutorial-modal.animating {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+@keyframes tutorial-fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tutorial-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(0.5px);
+  pointer-events: none; /* Permet les interactions avec l'interface derrière */
+}
+
+.tutorial-dialog {
+  position: relative;
+  /* Glassmorphism effect */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  min-width: 400px;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: tutorial-slideIn 0.3s ease-out;
+  z-index: 10000;
+  pointer-events: auto; /* Permet les interactions avec la fenêtre elle-même */
+}
+
+/* Dark mode glassmorphism */
+[data-theme="dark"] .tutorial-dialog {
+  background: rgba(29, 29, 31, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+@keyframes tutorial-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tutorial-dialog.tutorial-position-top {
+  margin-bottom: auto;
+  margin-top: 80px;
+}
+
+.tutorial-dialog.tutorial-position-bottom {
+  margin-top: auto;
+  margin-bottom: 80px;
+}
+
+.tutorial-dialog.tutorial-position-left {
+  margin-right: auto;
+  margin-left: 80px;
+}
+
+.tutorial-dialog.tutorial-position-right {
+  margin-left: auto;
+  margin-right: 80px;
+}
+
+.tutorial-dialog.tutorial-position-center {
+  margin: auto;
+}
+
+.tutorial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .tutorial-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tutorial-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.tutorial-progress {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .tutorial-progress {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-content {
+  padding: 24px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 14px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tutorial-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
+}
+
+[data-theme="dark"] .tutorial-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tutorial-actions-left,
+.tutorial-actions-center,
+.tutorial-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.tutorial-actions-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.tutorial-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: none;
+  outline: none;
+}
+
+.tutorial-btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.tutorial-btn-primary:hover {
+  background: var(--accent);
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tutorial-btn-secondary {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+  backdrop-filter: blur(10px);
+}
+
+.tutorial-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .tutorial-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .tutorial-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tutorial-btn-skip {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.tutorial-btn-skip:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .tutorial-btn-skip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-progress-bar {
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .tutorial-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #5856d6);
+  transition: width 0.3s ease-out;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tutorial-dialog {
+    min-width: 90vw;
+    max-width: 90vw;
+    margin: 20px;
+  }
+
+  .tutorial-footer {
+    flex-direction: column;
+  }
+
+  .tutorial-actions-left,
+  .tutorial-actions-center,
+  .tutorial-actions-right {
+    width: 100%;
+    justify-content: center;
+  }
+}
