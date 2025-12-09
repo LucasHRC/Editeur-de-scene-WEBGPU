@@ -1,15 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useScene } from '../hooks/useScene';
 import { Sphere, Box, Vec3, Color } from '../types/scene';
 import './Inspector.css';
 
-type Tab = 'object' | 'scene' | 'shortcuts';
+type Tab = 'object' | 'scene' | 'shortcuts' | 'code';
 
-export function Inspector() {
-  const { scene, updateSphere, updateBox, updateCamera, getSelectedObject, deleteSelected, duplicateSelected } = useScene();
+interface InspectorProps {
+  isVisible: boolean;
+  onToggle: () => void;
+}
+
+export function Inspector({ isVisible, onToggle }: InspectorProps) {
+  const { 
+    scene, 
+    selectObject,
+    addSphere,
+    addBox,
+    updateSphere, 
+    updateBox, 
+    updateCamera, 
+    getSelectedObject, 
+    deleteSelected, 
+    duplicateSelected, 
+    exportScene, 
+    importScene 
+  } = useScene();
   const [activeTab, setActiveTab] = useState<Tab>('object');
+  const [codeValue, setCodeValue] = useState('');
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const objectControlsRef = useRef<HTMLDivElement | null>(null);
 
   const selectedObject = getSelectedObject();
+
+  const objectOptions = useMemo(() => {
+    const spheres = scene.spheres.map(s => ({
+      id: s.id,
+      type: 'sphere' as const,
+      label: `● ${s.name}`,
+    }));
+    const boxes = scene.boxes.map(b => ({
+      id: b.id,
+      type: 'box' as const,
+      label: `■ ${b.name}`,
+    }));
+    return [...spheres, ...boxes];
+  }, [scene.spheres, scene.boxes]);
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (!value) {
+      selectObject(null, null);
+      return;
+    }
+    const [type, id] = value.split(':');
+    if (type === 'sphere' || type === 'box') {
+      selectObject(id, type);
+    }
+  };
 
   const rgbToHex = (c: Color) => {
     const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
@@ -53,8 +100,57 @@ export function Inspector() {
     }
   };
 
+  // Charger le code quand on change d'onglet
+  useEffect(() => {
+    if (activeTab === 'code') {
+      const json = exportScene();
+      setCodeValue(json);
+      setCodeError(null);
+    }
+  }, [activeTab, exportScene]);
+
+  useEffect(() => {
+    if (!objectControlsRef.current || !selectedObject) return;
+    objectControlsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [selectedObject]);
+
+  const handleApplyCode = () => {
+    try {
+      setCodeError(null);
+      const success = importScene(codeValue);
+      if (!success) {
+        setCodeError('Format JSON invalide. Vérifiez la structure de votre scène.');
+      }
+    } catch (error) {
+      setCodeError('Erreur lors de l\'application du code. Vérifiez que le JSON est valide.');
+    }
+  };
+
+  if (!isVisible) {
+    return (
+      <button 
+        className="inspector-toggle-button"
+        onClick={onToggle}
+        title="Afficher l'inspecteur"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
+    );
+  }
+
   return (
     <aside className="inspector">
+      <button 
+        className="inspector-close-button"
+        onClick={onToggle}
+        title="Masquer l'inspecteur"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
       <div className="inspector-tabs">
         <button 
           className={`tab ${activeTab === 'object' ? 'active' : ''}`}
@@ -74,13 +170,19 @@ export function Inspector() {
         >
           ⌨️
         </button>
+        <button 
+          className={`tab ${activeTab === 'code' ? 'active' : ''}`}
+          onClick={() => setActiveTab('code')}
+        >
+          Code
+        </button>
       </div>
 
       <div className="inspector-content">
         {activeTab === 'object' && (
           <>
             {selectedObject ? (
-              <div className="inspector-section">
+              <div className="inspector-section" ref={objectControlsRef}>
                 <h3 className="section-title">
                   {scene.selectedType === 'sphere' ? '● ' : '■ '}
                   {selectedObject.name}
@@ -182,6 +284,48 @@ export function Inspector() {
                 <p className="hint">Click an object in the sidebar or viewport</p>
               </div>
             )}
+
+            <div className="inspector-section">
+              <h3 className="section-title">Select Object</h3>
+              <div className="control-group">
+                <label className="control-label">Scene Objects</label>
+                <select 
+                  className="dropdown"
+                  value={selectedObject ? `${scene.selectedType}:${selectedObject.id}` : ''}
+                  onChange={handleSelectChange}
+                >
+                  <option value="">— Select —</option>
+                  {objectOptions.map((opt) => (
+                    <option key={`${opt.type}:${opt.id}`} value={`${opt.type}:${opt.id}`}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="inspector-section">
+              <h3 className="section-title">Add Object</h3>
+              <div className="control-group actions">
+                <button 
+                  className="action-btn"
+                  onClick={addSphere}
+                  disabled={scene.spheres.length >= 8}
+                >
+                  + Sphere
+                </button>
+                <button 
+                  className="action-btn"
+                  onClick={addBox}
+                  disabled={scene.boxes.length >= 8}
+                >
+                  + Box
+                </button>
+                <div className="control-hint">
+                  {scene.spheres.length}/8 spheres • {scene.boxes.length}/8 boxes
+                </div>
+              </div>
+            </div>
           </>
         )}
 
@@ -283,6 +427,34 @@ export function Inspector() {
                 <span className="shortcut-key">Double-click</span>
                 <span className="shortcut-desc">Rename object (in sidebar)</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'code' && (
+          <div className="inspector-section">
+            <h3 className="section-title">Code de la scène</h3>
+            <div className="code-editor-container">
+              <textarea
+                className="code-editor"
+                value={codeValue}
+                onChange={(e) => {
+                  setCodeValue(e.target.value);
+                  setCodeError(null);
+                }}
+                spellCheck={false}
+              />
+              {codeError && (
+                <div className="code-error">
+                  {codeError}
+                </div>
+              )}
+              <button 
+                className="code-apply-button"
+                onClick={handleApplyCode}
+              >
+                Appliquer les modifications
+              </button>
             </div>
           </div>
         )}

@@ -35,7 +35,7 @@ export const tutorialSteps: TutorialStep[] = [
   {
     id: 'inspector',
     title: 'Éditer les propriétés',
-    content: 'L\'onglet "Object" dans l\'inspecteur vous permet de modifier la position (X, Y, Z), la taille/rayon, et la couleur de l\'objet sélectionné en temps réel.',
+    content: 'L\'inspecteur s\'ouvre automatiquement quand vous sélectionnez un objet. L\'onglet "Object" vous permet de modifier la position (X, Y, Z), la taille/rayon, et la couleur en temps réel. Vous pouvez rabattre l\'inspecteur avec le bouton en haut à droite, et le rouvrir avec le bouton au bord droit de la fenêtre.',
     target: '.inspector',
     position: 'left',
     showHighlight: true,

@@ -11,6 +11,7 @@ export function Layout() {
   const { scene, selectObject, deleteSelected, duplicateSelected, exportScene, importScene, focusOnObject } = useScene();
   const [isPaused, setIsPaused] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isInspectorVisible, setIsInspectorVisible] = useState(true);
   const viewportRef = useRef<ViewportHandle>(null);
 
   // Check if tutorial should be shown on first load
@@ -23,6 +24,13 @@ export function Layout() {
       }, 500);
     }
   }, []);
+
+  // Ouvrir automatiquement l'Inspector quand un objet est sélectionné
+  useEffect(() => {
+    if (scene.selectedId && scene.selectedType && !isInspectorVisible) {
+      setIsInspectorVisible(true);
+    }
+  }, [scene.selectedId, scene.selectedType, isInspectorVisible]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -103,6 +111,10 @@ export function Layout() {
     setShowTutorial(false);
   }, []);
 
+  const handleToggleInspector = useCallback(() => {
+    setIsInspectorVisible(prev => !prev);
+  }, []);
+
   return (
     <div className="layout">
       <TopBar 
@@ -118,7 +130,10 @@ export function Layout() {
         <main className="layout-viewport">
           <Viewport ref={viewportRef} isPaused={isPaused} />
         </main>
-        <Inspector />
+        <Inspector 
+          isVisible={isInspectorVisible} 
+          onToggle={handleToggleInspector}
+        />
       </div>
       {showTutorial && (
         <Tutorial

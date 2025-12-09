@@ -68,66 +68,43 @@ export function TutorialHighlight({ targetSelector, position = 'bottom', show = 
   }
 
   const padding = 8;
-  const highlightRect = {
-    x: targetRect.left - padding,
-    y: targetRect.top - padding,
-    width: targetRect.width + padding * 2,
-    height: targetRect.height + padding * 2,
-  };
-
-  let arrowStyle: React.CSSProperties = {};
-  const arrowSize = 12;
-
-  switch (position) {
-    case 'top':
-      arrowStyle = {
-        bottom: -arrowSize * 2,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        borderTopColor: 'var(--accent)',
-        borderBottom: 'none',
-        borderLeft: `${arrowSize}px solid transparent`,
-        borderRight: `${arrowSize}px solid transparent`,
-        borderTop: `${arrowSize}px solid var(--accent)`,
-      };
-      break;
-    case 'bottom':
-      arrowStyle = {
-        top: -arrowSize * 2,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        borderBottomColor: 'var(--accent)',
-        borderTop: 'none',
-        borderLeft: `${arrowSize}px solid transparent`,
-        borderRight: `${arrowSize}px solid transparent`,
-        borderBottom: `${arrowSize}px solid var(--accent)`,
-      };
-      break;
-    case 'left':
-      arrowStyle = {
-        right: -arrowSize * 2,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        borderLeftColor: 'var(--accent)',
-        borderRight: 'none',
-        borderTop: `${arrowSize}px solid transparent`,
-        borderBottom: `${arrowSize}px solid transparent`,
-        borderLeft: `${arrowSize}px solid var(--accent)`,
-      };
-      break;
-    case 'right':
-      arrowStyle = {
-        left: -arrowSize * 2,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        borderRightColor: 'var(--accent)',
-        borderLeft: 'none',
-        borderTop: `${arrowSize}px solid transparent`,
-        borderBottom: `${arrowSize}px solid transparent`,
-        borderRight: `${arrowSize}px solid var(--accent)`,
-      };
-      break;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  // Calculer la position et la taille de l'encadrement en s'assurant qu'il reste dans la fenêtre
+  let x = targetRect.left - padding;
+  let y = targetRect.top - padding;
+  let width = targetRect.width + padding * 2;
+  let height = targetRect.height + padding * 2;
+  
+  // Ajuster si l'encadrement dépasse à gauche
+  if (x < 0) {
+    width += x; // Réduire la largeur
+    x = 0;
   }
+  
+  // Ajuster si l'encadrement dépasse en haut
+  if (y < 0) {
+    height += y; // Réduire la hauteur
+    y = 0;
+  }
+  
+  // Ajuster si l'encadrement dépasse à droite
+  if (x + width > viewportWidth) {
+    width = viewportWidth - x;
+  }
+  
+  // Ajuster si l'encadrement dépasse en bas
+  if (y + height > viewportHeight) {
+    height = viewportHeight - y;
+  }
+  
+  const highlightRect = {
+    x,
+    y,
+    width: Math.max(width, targetRect.width), // S'assurer qu'on ne réduit pas en dessous de la taille de l'élément
+    height: Math.max(height, targetRect.height),
+  };
 
   const maskId = `tutorial-mask-${targetSelector?.replace(/[^a-zA-Z0-9]/g, '-') || 'default'}`;
 
@@ -147,7 +124,7 @@ export function TutorialHighlight({ targetSelector, position = 'bottom', show = 
             />
           </mask>
         </defs>
-        <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask={`url(#${maskId})`} />
+        <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.5)" mask={`url(#${maskId})`} />
       </svg>
       <div
         className="tutorial-highlight-box"
@@ -159,7 +136,6 @@ export function TutorialHighlight({ targetSelector, position = 'bottom', show = 
         }}
       >
         <div className="tutorial-highlight-glow" />
-        <div className="tutorial-arrow" style={arrowStyle} />
       </div>
     </div>
   );
