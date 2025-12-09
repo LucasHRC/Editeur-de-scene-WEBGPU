@@ -1,13 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './TutorialHighlight.css';
 
 interface TutorialHighlightProps {
   targetSelector?: string;
-  position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
   show?: boolean;
 }
 
-export function TutorialHighlight({ targetSelector, position = 'bottom', show = true }: TutorialHighlightProps) {
+export function TutorialHighlight({ targetSelector, show = true }: TutorialHighlightProps) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 

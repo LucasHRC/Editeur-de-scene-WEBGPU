@@ -117,23 +117,6 @@
   margin-bottom: 16px;
 }
 
-.dropdown {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-.dropdown:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 132, 0, 0.15);
-}
-
 .control-label {
   display: block;
   font-size: 11px;
@@ -242,9 +225,6 @@
   font-size: 12px;
   font-weight: 500;
   transition: all var(--transition);
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
 }
 
 .action-btn .shortcut {
@@ -264,14 +244,6 @@
 .action-btn.duplicate:hover {
   background: var(--accent);
   color: white;
-}
-
-.action-btn:hover:not(.delete):not(.duplicate) {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-  transform: translateY(-1px);
 }
 
 .action-btn.delete {

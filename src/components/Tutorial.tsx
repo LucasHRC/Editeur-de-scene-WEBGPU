@@ -117,7 +117,6 @@ export function Tutorial({ onClose, onSkip }: TutorialProps) {
       {step.showHighlight && step.target && (
         <TutorialHighlight
           targetSelector={step.target}
-          position={step.position}
           show={!isAnimating}
         />
       )}

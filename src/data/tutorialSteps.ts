@@ -35,9 +35,17 @@ export const tutorialSteps: TutorialStep[] = [
   {
     id: 'inspector',
     title: 'Éditer les propriétés',
-    content: 'L\'inspecteur s\'ouvre automatiquement quand vous sélectionnez un objet. L\'onglet "Object" vous permet de modifier la position (X, Y, Z), la taille/rayon, et la couleur en temps réel. Vous pouvez rabattre l\'inspecteur avec le bouton en haut à droite, et le rouvrir avec le bouton au bord droit de la fenêtre.',
+    content: 'L\'inspecteur s\'ouvre quand un objet est sélectionné. Onglet "Object" : position (X,Y,Z), taille/rayon, couleur en temps réel. Vous pouvez le replier avec le bouton à droite et le rouvrir depuis le bord droit.',
     target: '.inspector',
     position: 'left',
+    showHighlight: true,
+  },
+  {
+    id: 'camera-controls',
+    title: 'Contrôles de la caméra',
+    content: 'Dans le viewport : glisser pour orbiter, molette pour zoomer. Onglet "Scene" de l\'inspecteur : FOV, distance, angles.',
+    target: '.viewport-canvas',
+    position: 'top',
     showHighlight: true,
   },
   {
@@ -57,14 +65,6 @@ export const tutorialSteps: TutorialStep[] = [
     showHighlight: true,
   },
   {
-    id: 'keyboard-shortcuts',
-    title: 'Raccourcis clavier',
-    content: 'Utilisez les raccourcis : Delete/Backspace (supprimer), D (dupliquer), F (focus caméra), Escape (désélectionner), Space (pause/play). Consultez l\'onglet ⌨️ dans l\'inspecteur pour la liste complète.',
-    target: '.inspector-tabs',
-    position: 'left',
-    showHighlight: true,
-  },
-  {
     id: 'topbar-actions',
     title: 'Actions de la barre supérieure',
     content: 'La barre supérieure contient : Pause/Play (animation), Export/Import (scène JSON), Screenshot (capture PNG), Reset Camera, et le toggle Dark/Light mode.',
@@ -73,19 +73,19 @@ export const tutorialSteps: TutorialStep[] = [
     showHighlight: true,
   },
   {
-    id: 'camera-controls',
-    title: 'Contrôles de la caméra',
-    content: 'Dans le viewport : glissez pour faire tourner la caméra, utilisez la molette pour zoomer/dézoomer. L\'onglet "Scene" dans l\'inspecteur permet d\'ajuster le FOV, la distance et les angles.',
-    target: '.viewport-canvas',
-    position: 'top',
-    showHighlight: true,
-  },
-  {
     id: 'visibility',
     title: 'Gérer la visibilité',
     content: 'Cliquez sur l\'icône œil à côté de chaque objet dans la sidebar pour le masquer ou l\'afficher. Les objets masqués restent dans la scène mais ne sont pas rendus.',
     target: '.list-item-visibility',
     position: 'right',
+    showHighlight: true,
+  },
+  {
+    id: 'keyboard-shortcuts',
+    title: 'Raccourcis clavier',
+    content: 'Raccourcis utiles : Delete/Backspace (supprimer), D (dupliquer), F (focus caméra), Escape (désélectionner), Space (pause/play). Onglet ⌨️ de l\'inspecteur pour la liste complète.',
+    target: '.inspector-tabs',
+    position: 'left',
     showHighlight: true,
   },
   {

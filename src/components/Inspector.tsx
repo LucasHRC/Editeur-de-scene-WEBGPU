@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useScene } from '../hooks/useScene';
 import { Sphere, Box, Vec3, Color } from '../types/scene';
 import './Inspector.css';
@@ -13,9 +13,6 @@ interface InspectorProps {
 export function Inspector({ isVisible, onToggle }: InspectorProps) {
   const { 
     scene, 
-    selectObject,
-    addSphere,
-    addBox,
     updateSphere, 
     updateBox, 
     updateCamera, 
@@ -31,32 +28,6 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
   const objectControlsRef = useRef<HTMLDivElement | null>(null);
 
   const selectedObject = getSelectedObject();
-
-  const objectOptions = useMemo(() => {
-    const spheres = scene.spheres.map(s => ({
-      id: s.id,
-      type: 'sphere' as const,
-      label: `● ${s.name}`,
-    }));
-    const boxes = scene.boxes.map(b => ({
-      id: b.id,
-      type: 'box' as const,
-      label: `■ ${b.name}`,
-    }));
-    return [...spheres, ...boxes];
-  }, [scene.spheres, scene.boxes]);
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (!value) {
-      selectObject(null, null);
-      return;
-    }
-    const [type, id] = value.split(':');
-    if (type === 'sphere' || type === 'box') {
-      selectObject(id, type);
-    }
-  };
 
   const rgbToHex = (c: Color) => {
     const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
@@ -284,48 +255,6 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
                 <p className="hint">Click an object in the sidebar or viewport</p>
               </div>
             )}
-
-            <div className="inspector-section">
-              <h3 className="section-title">Select Object</h3>
-              <div className="control-group">
-                <label className="control-label">Scene Objects</label>
-                <select 
-                  className="dropdown"
-                  value={selectedObject ? `${scene.selectedType}:${selectedObject.id}` : ''}
-                  onChange={handleSelectChange}
-                >
-                  <option value="">— Select —</option>
-                  {objectOptions.map((opt) => (
-                    <option key={`${opt.type}:${opt.id}`} value={`${opt.type}:${opt.id}`}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="inspector-section">
-              <h3 className="section-title">Add Object</h3>
-              <div className="control-group actions">
-                <button 
-                  className="action-btn"
-                  onClick={addSphere}
-                  disabled={scene.spheres.length >= 8}
-                >
-                  + Sphere
-                </button>
-                <button 
-                  className="action-btn"
-                  onClick={addBox}
-                  disabled={scene.boxes.length >= 8}
-                >
-                  + Box
-                </button>
-                <div className="control-hint">
-                  {scene.spheres.length}/8 spheres • {scene.boxes.length}/8 boxes
-                </div>
-              </div>
-            </div>
           </>
         )}
 
