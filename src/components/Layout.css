@@ -17,14 +17,12 @@
   flex: 1;
   overflow: hidden;
   background: #000;
-  min-width: 0; /* Evite débordement flexbox */
+  min-width: 0;
 }
 
 /* Z-index hierarchy */
 :root {
   --z-overlay: 1000;
-  --z-inspector-toggle: 1100;
   --z-context-menu: 1200;
   --z-tutorial: 1300;
 }
-

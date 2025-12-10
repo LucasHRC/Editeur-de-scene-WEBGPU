@@ -2,65 +2,127 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://lucashrc.github.io/Editeur-de-scene-WEBGPU/)
 
-![Aperçu de l’éditeur](Demo.gif)
+![Demo](gif-readme/Demo.gif)
 
-Éditeur de scène 3D en ray marching avec WebGPU : création et modification d’objets (sphères, cubes), sélection directe dans le viewport, UI d’inspection en temps réel et export/import de scènes JSON.
+Editeur de scenes 3D temps reel base sur WebGPU et ray marching.
+Manipulation de spheres et boites directement dans la scene, export/import JSON.
 
-## Fonctionnalités clés
-- Scène paramétrable via arrays de primitives (jusqu’à 8 sphères et 8 cubes)
-- Contrôles d’objet : position, rayon/taille, couleur, visibilité, duplication, suppression
-- Sélection directe dans le viewport (raycast aligné sur le shader) et mise en évidence
-- UI d’inspection dynamique : sélection d’objet, ajout d’objets, auto-scroll vers le bloc actif
-- Caméra orbitale complète (rotation, zoom, FOV), focus sur objet
-- Export/Import JSON, tutoriel interactif, raccourcis clavier
-- Mode sombre/clair et gizmo 3D dans le shader pour la sélection
+---
+
+## Fonctionnalites
+
+<table>
+<tr>
+<td width="50%">
+
+**Selection des objets 3D**
+
+![Selection](gif-readme/selection-des-models-3D.gif)
+
+</td>
+<td width="50%">
+
+**Deplacement via controles**
+
+![Deplacement](gif-readme/Déplacement-dynamique-sur-controles-&-scene.gif)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Camera orbitale**
+
+![Camera](gif-readme/déplacement-angle-a-camera-dynamique-scene-curseurs.gif)
+
+</td>
+<td width="50%">
+
+**Duplication et focus**
+
+![Commandes](gif-readme/commandes%20rapides%20dupliquer%20et%20focus%20camera%20avec%20zoom%20dezoom.gif)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Renommage des objets**
+
+![Renommage](gif-readme/renommge%20des%20models%203D.gif)
+
+</td>
+<td width="50%">
+
+**Theme sombre / clair**
+
+![Theme](gif-readme/mode-sombre-clair.gif)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Export de la scene**
+
+![Export](gif-readme/download%20du%20code.gif)
+
+</td>
+<td width="50%">
+
+**Import d'une scene**
+
+![Import](gif-readme/upload%20d'un%20code.gif)
+
+</td>
+</tr>
+</table>
+
+---
 
 ## Stack technique
-- WebGPU + WGSL (ray marching temps réel)
-- React 18, TypeScript
-- Vite (développement et build)
-- CSS custom pour l’UI (thème clair/sombre)
 
-## Démarrage rapide
-Prérequis : Node.js 18+, navigateur WebGPU (Chrome/Edge 113+).  
-Installation :
+- WebGPU + WGSL (ray marching)
+- React 18 + TypeScript
+- Vite
+
+---
+
+## Installation
+
 ```bash
 npm install
 ```
-Développement (Vite) :
+
+## Developpement
+
 ```bash
 npm run dev
 # http://localhost:5180
 ```
-Serveur statique (alternative) :
-```bash
-python -m http.server
-# http://localhost:8000
-```
-Build production :
+
+## Build
+
 ```bash
 npm run build
-# artefacts dans dist/
 ```
 
-## Déploiement
-- Workflow GitHub Pages déjà configuré : `.github/workflows/deploy.yml`
-- Base Vite adaptée (`base: './'`) pour un déploiement statique
-- Démo publique : lien en haut de page
+---
 
-## Structure du projet
-```
-src/
-├── components/      UI (viewport, inspector, sidebar, topbar)
-├── hooks/           useScene, useWebGPU
-├── webgpu/          renderer, buffers, shaders WGSL
-└── types/           définitions TypeScript
-```
+## Raccourcis
 
-## Points remarquables
-- Raycast JS calé sur le shader pour la cohérence viewport/shader
-- UI réactive alignée sur la structure de scène et les bornes (MAX_SPHERES/BOXES)
-- Mise en avant de la sélection et tutoriel embarqué pour l’onboarding
+| Touche | Action |
+| --- | --- |
+| `Delete` | Supprimer l'objet |
+| `D` | Dupliquer |
+| `F` | Focus camera |
+| `Esc` | Deselectionner |
+| `Space` | Pause / Play |
+| Molette | Zoom |
+| Drag viewport | Orbite camera |
+
+---
 
 ## Licence
+
 MIT

@@ -80,12 +80,12 @@ function rayBoxIntersect(
 
 type Vec3 = [number, number, number];
 
-const GIZMO_SCALE = 1.5;
-const GIZMO_AXIS_LEN = 1.0 * GIZMO_SCALE;
-const GIZMO_AXIS_R = 0.07 * GIZMO_SCALE;
-const GIZMO_CONE_H = 0.28 * GIZMO_SCALE;
-const GIZMO_CONE_R = 0.12 * GIZMO_SCALE;
-const GIZMO_HIT_MARGIN = 0.12;
+const GIZMO_SCALE = 1.0;
+const GIZMO_AXIS_LEN = 0.8 * GIZMO_SCALE;
+const GIZMO_AXIS_R = 0.05 * GIZMO_SCALE;
+const GIZMO_CONE_H = 0.2 * GIZMO_SCALE;
+const GIZMO_CONE_R = 0.08 * GIZMO_SCALE;
+const GIZMO_HIT_MARGIN = 0.1;
 
 function dot(a: Vec3, b: Vec3) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -216,8 +216,7 @@ function getCameraBasis(camera: {
 function projectMouseToAxis(
   mouseDelta: [number, number],
   axis: 'x' | 'y' | 'z',
-  camera: { pitch: number; yaw: number; distance: number; target: { x: number; y: number; z: number } },
-  gizmoPos: Vec3
+  camera: { pitch: number; yaw: number; distance: number; target: { x: number; y: number; z: number } }
 ): number {
   const { right, up } = getCameraBasis(camera);
   const sensitivity = Math.max(0.002 * camera.distance, 0.001);
@@ -466,7 +465,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused },
       ];
       // Mode précision avec Shift (sensibilité réduite x0.25)
       const precision = e.shiftKey ? 0.25 : 1;
-      const move = projectMouseToAxis(delta, gizmoDragAxis, scene.camera, gizmoDragStart.objectPos) * precision;
+      const move = projectMouseToAxis(delta, gizmoDragAxis, scene.camera) * precision;
       const axisVec: Vec3 =
         gizmoDragAxis === 'x' ? [1, 0, 0] :
         gizmoDragAxis === 'y' ? [0, 1, 0] :

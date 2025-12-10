@@ -81,15 +81,16 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
     }
   };
 
-  // Bouton toggle quand l'inspector est masqué
+  // Bouton pour réouvrir l'inspecteur quand il est masqué
   if (!isVisible) {
     return (
       <button
-        className="inspector-toggle-button"
+        type="button"
+        className="inspector-toggle"
         onClick={onToggle}
         title="Afficher l'inspecteur"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
       </button>
@@ -99,15 +100,15 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
   return (
     <aside className="inspector">
       <button
-        className="inspector-close-button"
+        type="button"
+        className="inspector-close"
         onClick={onToggle}
         title="Masquer l'inspecteur"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </button>
-
       <div className="inspector-tabs">
         <button 
           className={`tab ${activeTab === 'object' ? 'active' : ''}`}

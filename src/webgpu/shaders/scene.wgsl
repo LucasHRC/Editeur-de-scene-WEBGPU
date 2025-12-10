@@ -261,12 +261,12 @@ fn get_dist(p: vec3<f32>) -> vec2<f32> {
   // Gizmo (if object selected)
   if scene.selection.x >= 0.0 {
     let gizmo_center = scene.gizmo_pos.xyz;
-    // Gizmo plus large pour meilleure visibilité et saisie
-    let gizmo_scale = 1.5;
-    let axis_len = 1.0 * gizmo_scale;
-    let axis_r = 0.07 * gizmo_scale;
-    let cone_h = 0.28 * gizmo_scale;
-    let cone_r = 0.12 * gizmo_scale;
+    // Gizmo plus petit pour moins d'encombrement visuel
+    let gizmo_scale = 1.0;
+    let axis_len = 0.8 * gizmo_scale;
+    let axis_r = 0.05 * gizmo_scale;
+    let cone_h = 0.2 * gizmo_scale;
+    let cone_r = 0.08 * gizmo_scale;
 
     // X axis (red) - cylindre le long de +X
     let px = p - gizmo_center;

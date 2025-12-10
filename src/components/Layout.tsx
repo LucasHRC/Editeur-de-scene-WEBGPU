@@ -25,13 +25,6 @@ export function Layout() {
     }
   }, []);
 
-  // Ouvrir automatiquement l'Inspector quand un objet est sélectionné
-  useEffect(() => {
-    if (scene.selectedId && scene.selectedType && !isInspectorVisible) {
-      setIsInspectorVisible(true);
-    }
-  }, [scene.selectedId, scene.selectedType, isInspectorVisible]);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
