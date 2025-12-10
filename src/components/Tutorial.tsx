@@ -12,12 +12,82 @@ interface TutorialProps {
 export function Tutorial({ onClose, onSkip }: TutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [dialogPosition, setDialogPosition] = useState<{ x: number; y: number } | null>(null);
   const { scene, addSphere, selectObject } = useScene();
   const actionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const step = tutorialSteps[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === tutorialSteps.length - 1;
+
+  // Calcul de la position intelligente du dialog
+  useEffect(() => {
+    if (!step.target || step.position === 'center') {
+      setDialogPosition(null);
+      return;
+    }
+
+    const calculatePosition = () => {
+      const targetElement = document.querySelector(step.target!);
+      if (!targetElement) {
+        setDialogPosition(null);
+        return;
+      }
+
+      const targetRect = targetElement.getBoundingClientRect();
+      const dialogWidth = 380;
+      const dialogHeight = 200;
+      const padding = 20;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let x = 0;
+      let y = 0;
+
+      // Déterminer la meilleure position en fonction de l'espace disponible
+      const spaceRight = viewportWidth - targetRect.right;
+      const spaceLeft = targetRect.left;
+      const spaceBottom = viewportHeight - targetRect.bottom;
+      const spaceTop = targetRect.top;
+
+      // Préférence: droite > gauche > bas > haut
+      if (spaceRight >= dialogWidth + padding) {
+        // Placer à droite
+        x = targetRect.right + padding;
+        y = Math.max(padding, Math.min(targetRect.top, viewportHeight - dialogHeight - padding));
+      } else if (spaceLeft >= dialogWidth + padding) {
+        // Placer à gauche
+        x = targetRect.left - dialogWidth - padding;
+        y = Math.max(padding, Math.min(targetRect.top, viewportHeight - dialogHeight - padding));
+      } else if (spaceBottom >= dialogHeight + padding) {
+        // Placer en bas
+        x = Math.max(padding, Math.min(targetRect.left, viewportWidth - dialogWidth - padding));
+        y = targetRect.bottom + padding;
+      } else if (spaceTop >= dialogHeight + padding) {
+        // Placer en haut
+        x = Math.max(padding, Math.min(targetRect.left, viewportWidth - dialogWidth - padding));
+        y = targetRect.top - dialogHeight - padding;
+      } else {
+        // Fallback: centrer
+        setDialogPosition(null);
+        return;
+      }
+
+      // Clamp final pour s'assurer que le dialog reste dans le viewport
+      x = Math.max(padding, Math.min(x, viewportWidth - dialogWidth - padding));
+      y = Math.max(padding, Math.min(y, viewportHeight - dialogHeight - padding));
+
+      setDialogPosition({ x, y });
+    };
+
+    calculatePosition();
+    window.addEventListener('resize', calculatePosition);
+    
+    return () => {
+      window.removeEventListener('resize', calculatePosition);
+    };
+  }, [step.target, step.position, currentStep]);
 
   useEffect(() => {
     if (actionTimeoutRef.current) {
@@ -48,6 +118,7 @@ export function Tutorial({ onClose, onSkip }: TutorialProps) {
           }
           break;
         case 'viewport-select':
+        case 'gizmo':
           if (scene.spheres.length > 0 && !scene.selectedId) {
             setTimeout(() => {
               selectObject(scene.spheres[0].id, 'sphere');
@@ -112,17 +183,32 @@ export function Tutorial({ onClose, onSkip }: TutorialProps) {
 
   if (!step) return null;
 
+  const dialogStyle: React.CSSProperties = dialogPosition
+    ? {
+        position: 'fixed',
+        left: `${dialogPosition.x}px`,
+        top: `${dialogPosition.y}px`,
+        transform: 'none',
+      }
+    : {};
+
   return (
     <>
       {step.showHighlight && step.target && (
         <TutorialHighlight
           targetSelector={step.target}
+          position={step.position}
           show={!isAnimating}
         />
       )}
       <div className={`tutorial-modal ${isAnimating ? 'animating' : ''}`}>
         <div className="tutorial-backdrop" />
-        <div className={`tutorial-dialog tutorial-position-${step.position || 'center'}`} onClick={(e) => e.stopPropagation()}>
+        <div 
+          ref={dialogRef}
+          className={`tutorial-dialog ${dialogPosition ? 'tutorial-positioned' : `tutorial-position-${step.position || 'center'}`}`}
+          style={dialogStyle}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="tutorial-header">
             <h2 className="tutorial-title">{step.title}</h2>
             <div className="tutorial-progress">

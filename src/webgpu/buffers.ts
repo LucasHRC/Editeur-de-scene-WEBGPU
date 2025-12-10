@@ -4,12 +4,13 @@ import { Scene, MAX_SPHERES, MAX_BOXES } from '../types/scene';
 // Sphere: 32 bytes (pos.xyz + radius + color.rgb + pad)
 // Box: 48 bytes (pos.xyz + pad + size.xyz + pad + color.rgb + pad)
 // params: 16 bytes (numSpheres, numBoxes, fov, pad)
-// camera: 16 bytes (pitch, yaw, distance, targetY)
+// camera: 16 bytes (pitch, yaw, distance, pad)
+// camera_target: 16 bytes (x, y, z, pad)
 // selection: 16 bytes (type, index, pad, pad)
 // gizmo_pos: 16 bytes (x, y, z, pad)
-// Total: 8*32 + 8*48 + 16 + 16 + 16 + 16 = 256 + 384 + 64 = 704 bytes
+// Total: 8*32 + 8*48 + 16 + 16 + 16 + 16 + 16 = 256 + 384 + 80 = 720 bytes
 
-export const SCENE_BUFFER_SIZE = 704;
+export const SCENE_BUFFER_SIZE = 720;
 export const UNIFORM_BUFFER_SIZE = 48; // resolution, time, deltaTime, mouse, frame, padding
 
 export function createSceneBuffer(device: GPUDevice): GPUBuffer {
@@ -85,11 +86,17 @@ export function writeSceneBuffer(device: GPUDevice, buffer: GPUBuffer, scene: Sc
   data[offset++] = scene.camera.fov;
   data[offset++] = 0;
 
-  // Write camera: pitch, yaw, distance, targetY
+  // Write camera: pitch, yaw, distance, pad
   data[offset++] = scene.camera.pitch;
   data[offset++] = scene.camera.yaw;
   data[offset++] = scene.camera.distance;
+  data[offset++] = 0; // pad
+
+  // Write camera_target: x, y, z, pad
+  data[offset++] = scene.camera.target.x;
   data[offset++] = scene.camera.target.y;
+  data[offset++] = scene.camera.target.z;
+  data[offset++] = 0; // pad
 
   // Write selection: type, index, pad, pad
   let selType = -1;

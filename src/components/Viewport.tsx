@@ -78,6 +78,156 @@ function rayBoxIntersect(
   return tmin > 0 ? tmin : tmax;
 }
 
+type Vec3 = [number, number, number];
+
+const GIZMO_SCALE = 1.5;
+const GIZMO_AXIS_LEN = 1.0 * GIZMO_SCALE;
+const GIZMO_AXIS_R = 0.07 * GIZMO_SCALE;
+const GIZMO_CONE_H = 0.28 * GIZMO_SCALE;
+const GIZMO_CONE_R = 0.12 * GIZMO_SCALE;
+const GIZMO_HIT_MARGIN = 0.12;
+
+function dot(a: Vec3, b: Vec3) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+function add(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+}
+
+function sub(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+
+function scale(a: Vec3, s: number): Vec3 {
+  return [a[0] * s, a[1] * s, a[2] * s];
+}
+
+function length(a: Vec3) {
+  return Math.sqrt(dot(a, a));
+}
+
+function normalize(a: Vec3): Vec3 {
+  const len = length(a);
+  if (len < 1e-6) return [0, 0, 0];
+  return [a[0] / len, a[1] / len, a[2] / len];
+}
+
+function rayAabbIntersect(rayOrigin: Vec3, rayDir: Vec3, minB: Vec3, maxB: Vec3): number | null {
+  let tmin = -Infinity;
+  let tmax = Infinity;
+
+  for (let i = 0; i < 3; i++) {
+    if (Math.abs(rayDir[i]) < 1e-8) {
+      if (rayOrigin[i] < minB[i] || rayOrigin[i] > maxB[i]) {
+        return null;
+      }
+    } else {
+      const invD = 1.0 / rayDir[i];
+      let t0 = (minB[i] - rayOrigin[i]) * invD;
+      let t1 = (maxB[i] - rayOrigin[i]) * invD;
+      if (t0 > t1) {
+        const tmp = t0;
+        t0 = t1;
+        t1 = tmp;
+      }
+      tmin = Math.max(tmin, t0);
+      tmax = Math.min(tmax, t1);
+      if (tmin > tmax) return null;
+    }
+  }
+
+  if (tmax < 0) return null;
+  return tmin > 0 ? tmin : tmax;
+}
+
+function raycastGizmoAxis(
+  rayOrigin: Vec3,
+  rayDir: Vec3,
+  gizmoPos: Vec3,
+  axis: 'x' | 'y' | 'z'
+): number | null {
+  const len = GIZMO_AXIS_LEN + GIZMO_CONE_H + GIZMO_HIT_MARGIN;
+  const r = Math.max(GIZMO_AXIS_R, GIZMO_CONE_R) + GIZMO_HIT_MARGIN;
+
+  if (axis === 'x') {
+    const minB: Vec3 = add(gizmoPos, [0, -r, -r]);
+    const maxB: Vec3 = add(gizmoPos, [len, r, r]);
+    return rayAabbIntersect(rayOrigin, rayDir, minB, maxB);
+  }
+  if (axis === 'y') {
+    const minB: Vec3 = add(gizmoPos, [-r, 0, -r]);
+    const maxB: Vec3 = add(gizmoPos, [r, len, r]);
+    return rayAabbIntersect(rayOrigin, rayDir, minB, maxB);
+  }
+
+  const minB: Vec3 = add(gizmoPos, [-r, -r, 0]);
+  const maxB: Vec3 = add(gizmoPos, [r, r, len]);
+  return rayAabbIntersect(rayOrigin, rayDir, minB, maxB);
+}
+
+function raycastGizmo(
+  rayOrigin: Vec3,
+  rayDir: Vec3,
+  gizmoPos: Vec3
+): { axis: 'x' | 'y' | 'z'; t: number } | null {
+  const hits: Array<{ axis: 'x' | 'y' | 'z'; t: number }> = [];
+  const tx = raycastGizmoAxis(rayOrigin, rayDir, gizmoPos, 'x');
+  if (tx !== null) hits.push({ axis: 'x', t: tx });
+  const ty = raycastGizmoAxis(rayOrigin, rayDir, gizmoPos, 'y');
+  if (ty !== null) hits.push({ axis: 'y', t: ty });
+  const tz = raycastGizmoAxis(rayOrigin, rayDir, gizmoPos, 'z');
+  if (tz !== null) hits.push({ axis: 'z', t: tz });
+
+  if (hits.length === 0) return null;
+  hits.sort((a, b) => a.t - b.t);
+  return hits[0];
+}
+
+function getCameraBasis(camera: {
+  pitch: number;
+  yaw: number;
+  distance: number;
+  target: { x: number; y: number; z: number };
+}) {
+  const { pitch, yaw, distance, target } = camera;
+  // Position caméra relative au target complet (x, y, z)
+  const camPos: Vec3 = [
+    Math.sin(yaw) * Math.cos(pitch) * distance + target.x,
+    Math.sin(pitch) * distance + target.y,
+    Math.cos(yaw) * Math.cos(pitch) * distance + target.z,
+  ];
+  const camTarget: Vec3 = [target.x, target.y, target.z];
+  const forward = normalize(sub(camTarget, camPos));
+  const worldUp: Vec3 = [0, 1, 0];
+  const right = normalize([
+    forward[1] * worldUp[2] - forward[2] * worldUp[1],
+    forward[2] * worldUp[0] - forward[0] * worldUp[2],
+    forward[0] * worldUp[1] - forward[1] * worldUp[0],
+  ]);
+  const up = normalize([
+    right[1] * forward[2] - right[2] * forward[1],
+    right[2] * forward[0] - right[0] * forward[2],
+    right[0] * forward[1] - right[1] * forward[0],
+  ]);
+  return { camPos, forward, right, up };
+}
+
+function projectMouseToAxis(
+  mouseDelta: [number, number],
+  axis: 'x' | 'y' | 'z',
+  camera: { pitch: number; yaw: number; distance: number; target: { x: number; y: number; z: number } },
+  gizmoPos: Vec3
+): number {
+  const { right, up } = getCameraBasis(camera);
+  const sensitivity = Math.max(0.002 * camera.distance, 0.001);
+  const worldDelta = add(scale(right, mouseDelta[0] * sensitivity), scale(up, -mouseDelta[1] * sensitivity));
+  const axisVec: Vec3 =
+    axis === 'x' ? [1, 0, 0] :
+    axis === 'y' ? [0, 1, 0] :
+    [0, 0, 1];
+  return dot(worldDelta, axisVec);
+}
 export interface ViewportHandle {
   getCanvas: () => HTMLCanvasElement | null;
 }
@@ -108,16 +258,15 @@ function computeRay(
 
   const { pitch, yaw, distance, target, fov } = camera;
   
-  // Camera position - match shader exactly:
-  // cam_pos = vec3(sin(yaw) * cos(pitch) * cam_dist, sin(pitch) * cam_dist + target_y, cos(yaw) * cos(pitch) * cam_dist)
+  // Camera position relative au target complet (x, y, z)
   const camPos: [number, number, number] = [
-    Math.sin(yaw) * Math.cos(pitch) * distance,
+    Math.sin(yaw) * Math.cos(pitch) * distance + target.x,
     Math.sin(pitch) * distance + target.y,
-    Math.cos(yaw) * Math.cos(pitch) * distance,
+    Math.cos(yaw) * Math.cos(pitch) * distance + target.z,
   ];
 
-  // Camera target - shader uses (0, target_y, 0)
-  const camTarget: [number, number, number] = [0, target.y, 0];
+  // Camera target complet
+  const camTarget: [number, number, number] = [target.x, target.y, target.z];
 
   // Camera forward direction (pointing at target)
   const forward: [number, number, number] = [
@@ -169,18 +318,39 @@ function computeRay(
 export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scene, updateCamera, selectObject } = useScene();
+  const { scene, updateCamera, selectObject, updateSphere, updateBox, resetObjectPosition, focusOnObject } = useScene();
   const { fps, isReady, error, handleMouseMove, handleMouseDown, handleMouseUp } = useWebGPU(canvasRef, scene, isPaused);
 
   const [isDragging, setIsDragging] = useState(false);
   const [isHoveringObject, setIsHoveringObject] = useState(false);
   const [hoveredObjectName, setHoveredObjectName] = useState<string | null>(null);
+  const [hoveredGizmoAxis, setHoveredGizmoAxis] = useState<'x' | 'y' | 'z' | null>(null);
+  const [gizmoDragAxis, setGizmoDragAxis] = useState<'x' | 'y' | 'z' | null>(null);
+  const [gizmoDragStart, setGizmoDragStart] = useState<{
+    mouse: [number, number];
+    objectPos: Vec3;
+    objId: string;
+    objType: 'sphere' | 'box';
+  } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; objId: string; objType: 'sphere' | 'box' } | null>(null);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
   useImperativeHandle(ref, () => ({
     getCanvas: () => canvasRef.current,
   }));
+
+  const getSelectedObject = useCallback((): { id: string; type: 'sphere' | 'box'; position: Vec3 } | null => {
+    if (!scene.selectedId || !scene.selectedType) return null;
+    if (scene.selectedType === 'sphere') {
+      const s = scene.spheres.find(sp => sp.id === scene.selectedId);
+      if (!s) return null;
+      return { id: s.id, type: 'sphere', position: [s.position.x, s.position.y, s.position.z] };
+    }
+    const b = scene.boxes.find(bx => bx.id === scene.selectedId);
+    if (!b) return null;
+    return { id: b.id, type: 'box', position: [b.position.x, b.position.y, b.position.z] };
+  }, [scene]);
 
   // Resize canvas to fit container
   useEffect(() => {
@@ -245,6 +415,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused },
 
   // Click to select object
   const handleClick = useCallback((e: React.MouseEvent) => {
+    if (gizmoDragAxis) return;
     // Check if this was a drag or a click
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
@@ -256,21 +427,84 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused },
 
   // Camera orbit controls
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    setIsDragging(true);
+    setContextMenu(null);
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     lastMouseRef.current = { x: e.clientX, y: e.clientY };
+
+    const canvas = canvasRef.current;
+    const selected = getSelectedObject();
+    if (canvas && selected) {
+      const ray = computeRay(e.clientX, e.clientY, canvas, scene.camera);
+      if (ray) {
+        const gizmoHit = raycastGizmo(ray.origin as Vec3, ray.dir as Vec3, selected.position);
+        if (gizmoHit) {
+          setGizmoDragAxis(gizmoHit.axis);
+          setGizmoDragStart({
+            mouse: [e.clientX, e.clientY],
+            objectPos: selected.position,
+            objId: selected.id,
+            objType: selected.type,
+          });
+          (e.target as HTMLElement).setPointerCapture(e.pointerId);
+          return;
+        }
+      }
+    }
+
+    setIsDragging(true);
+    setHoveredGizmoAxis(null);
     handleMouseDown();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [handleMouseDown]);
+  }, [getSelectedObject, handleMouseDown, scene.camera]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    // Drag gizmo: priorité absolue
+    if (gizmoDragAxis && gizmoDragStart) {
+      const delta: [number, number] = [
+        e.clientX - gizmoDragStart.mouse[0],
+        e.clientY - gizmoDragStart.mouse[1],
+      ];
+      // Mode précision avec Shift (sensibilité réduite x0.25)
+      const precision = e.shiftKey ? 0.25 : 1;
+      const move = projectMouseToAxis(delta, gizmoDragAxis, scene.camera, gizmoDragStart.objectPos) * precision;
+      const axisVec: Vec3 =
+        gizmoDragAxis === 'x' ? [1, 0, 0] :
+        gizmoDragAxis === 'y' ? [0, 1, 0] :
+        [0, 0, 1];
+      const newPos = add(gizmoDragStart.objectPos, scale(axisVec, move));
+
+      if (gizmoDragStart.objType === 'sphere') {
+        updateSphere(gizmoDragStart.objId, { position: { x: newPos[0], y: newPos[1], z: newPos[2] } });
+      } else {
+        updateBox(gizmoDragStart.objId, { position: { x: newPos[0], y: newPos[1], z: newPos[2] } });
+      }
+      setHoveredGizmoAxis(gizmoDragAxis);
+      return;
+    }
+
     handleMouseMove(e as unknown as React.MouseEvent<HTMLCanvasElement>);
 
-    // Check hover only when not dragging (throttled via native event rate)
+    // Hover gizmo + objets seulement si pas de drag caméra
     if (!isDragging) {
+      const canvas = canvasRef.current;
+      const selected = getSelectedObject();
+      if (canvas && selected) {
+        const ray = computeRay(e.clientX, e.clientY, canvas, scene.camera);
+        if (ray) {
+          const gizmoHit = raycastGizmo(ray.origin as Vec3, ray.dir as Vec3, selected.position);
+          setHoveredGizmoAxis(gizmoHit?.axis ?? null);
+          if (gizmoHit) {
+            setIsHoveringObject(false);
+            setHoveredObjectName(null);
+            return;
+          }
+        }
+      }
+
       const hit = raycastScene(e.clientX, e.clientY);
       setIsHoveringObject(hit !== null);
       setHoveredObjectName(hit?.name ?? null);
+      setHoveredGizmoAxis(null);
       return;
     }
 
@@ -283,22 +517,91 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused },
       yaw: scene.camera.yaw - dx * sensitivity,
       pitch: Math.max(0.1, Math.min(1.5, scene.camera.pitch + dy * sensitivity)),
     });
-  }, [isDragging, scene.camera, updateCamera, handleMouseMove, raycastScene]);
+  }, [gizmoDragAxis, gizmoDragStart, getSelectedObject, handleMouseMove, isDragging, raycastScene, scene.camera, updateBox, updateCamera, updateSphere]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     setIsDragging(false);
+    setGizmoDragAxis(null);
+    setGizmoDragStart(null);
+    setHoveredGizmoAxis(null);
     handleMouseUp();
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
   }, [handleMouseUp]);
 
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const hit = raycastScene(e.clientX, e.clientY);
+    if (!hit) {
+      setContextMenu(null);
+      return;
+    }
+    selectObject(hit.id, hit.type);
+    // Positionner le menu près du clic avec offset 8px et clamp dans le viewport
+    const container = containerRef.current;
+    const rect = container?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const menuWidth = 180;
+    const menuHeight = 120;
+    const offset = 8;
+    
+    let menuX = e.clientX - rect.left + offset;
+    let menuY = e.clientY - rect.top + offset;
+    
+    // Clamp pour rester dans le viewport
+    if (menuX + menuWidth > rect.width) {
+      menuX = e.clientX - rect.left - menuWidth - offset;
+    }
+    if (menuY + menuHeight > rect.height) {
+      menuY = e.clientY - rect.top - menuHeight - offset;
+    }
+    menuX = Math.max(8, menuX);
+    menuY = Math.max(8, menuY);
+    
+    setContextMenu({ x: menuX, y: menuY, objId: hit.id, objType: hit.type });
+  }, [raycastScene, selectObject]);
+
+  // Fermer le menu contextuel sur Escape ou clic hors menu
+  useEffect(() => {
+    if (!contextMenu) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setContextMenu(null);
+      }
+    };
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.viewport-context-menu')) {
+        setContextMenu(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [contextMenu]);
+
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const zoomSpeed = 0.001;
-    const newDistance = Math.max(2, Math.min(20, scene.camera.distance + e.deltaY * zoomSpeed * scene.camera.distance));
+    // Distance minimum 2.5 pour éviter de traverser l'objet
+    const newDistance = Math.max(2.5, Math.min(20, scene.camera.distance + e.deltaY * zoomSpeed * scene.camera.distance));
     updateCamera({ distance: newDistance });
   }, [scene.camera.distance, updateCamera]);
 
-  const cursorStyle = isDragging ? 'grabbing' : (isHoveringObject ? 'pointer' : 'grab');
+  let cursorStyle = 'grab';
+  const axisForCursor = gizmoDragAxis || hoveredGizmoAxis;
+  if (axisForCursor === 'x') cursorStyle = 'ew-resize';
+  else if (axisForCursor === 'y') cursorStyle = 'ns-resize';
+  else if (axisForCursor === 'z') cursorStyle = 'nesw-resize';
+  else if (isDragging) cursorStyle = 'grabbing';
+  else if (isHoveringObject) cursorStyle = 'pointer';
 
   return (
     <div ref={containerRef} className="viewport">
@@ -307,6 +610,7 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused },
         className="viewport-canvas"
         style={{ cursor: cursorStyle }}
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -343,6 +647,41 @@ export const Viewport = forwardRef<ViewportHandle, ViewportProps>(({ isPaused },
           Click to select • Drag to rotate • Scroll to zoom
         </div>
       </div>
+
+      {hoveredGizmoAxis && (
+        <div className={`viewport-overlay gizmo-hint gizmo-${hoveredGizmoAxis}`}>
+          Déplacer sur l’axe {hoveredGizmoAxis.toUpperCase()}
+        </div>
+      )}
+
+      {contextMenu && (
+        <div className="viewport-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+          <button
+            onClick={() => {
+              resetObjectPosition(contextMenu.objId, contextMenu.objType);
+              setContextMenu(null);
+            }}
+          >
+            Remettre à l'origine
+          </button>
+          <button
+            onClick={() => {
+              focusOnObject(contextMenu.objId, contextMenu.objType);
+              setContextMenu(null);
+            }}
+          >
+            Focus caméra
+          </button>
+          <button
+            onClick={() => {
+              selectObject(null, null);
+              setContextMenu(null);
+            }}
+          >
+            Désélectionner
+          </button>
+        </div>
+      )}
 
       {hoveredObjectName && !isDragging && (
         <div className="viewport-overlay hover-hint">

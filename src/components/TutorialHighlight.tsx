@@ -3,6 +3,7 @@ import './TutorialHighlight.css';
 
 interface TutorialHighlightProps {
   targetSelector?: string;
+  position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
   show?: boolean;
 }
 
@@ -67,42 +68,46 @@ export function TutorialHighlight({ targetSelector, show = true }: TutorialHighl
   }
 
   const padding = 8;
+  const minPadding = 4; // Padding minimum par rapport aux bords de la fenêtre
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  
-  // Calculer la position et la taille de l'encadrement en s'assurant qu'il reste dans la fenêtre
-  let x = targetRect.left - padding;
-  let y = targetRect.top - padding;
-  let width = targetRect.width + padding * 2;
-  let height = targetRect.height + padding * 2;
-  
-  // Ajuster si l'encadrement dépasse à gauche
-  if (x < 0) {
-    width += x; // Réduire la largeur
-    x = 0;
+
+  // Calculer le rectangle du highlight avec padding
+  let highlightX = targetRect.left - padding;
+  let highlightY = targetRect.top - padding;
+  let highlightWidth = targetRect.width + padding * 2;
+  let highlightHeight = targetRect.height + padding * 2;
+
+  // Clamp pour rester dans le viewport avec un minimum de padding
+  // Ajuster X
+  if (highlightX < minPadding) {
+    const overflow = minPadding - highlightX;
+    highlightX = minPadding;
+    highlightWidth = Math.max(targetRect.width, highlightWidth - overflow);
   }
-  
-  // Ajuster si l'encadrement dépasse en haut
-  if (y < 0) {
-    height += y; // Réduire la hauteur
-    y = 0;
+  if (highlightX + highlightWidth > viewportWidth - minPadding) {
+    highlightWidth = viewportWidth - minPadding - highlightX;
   }
-  
-  // Ajuster si l'encadrement dépasse à droite
-  if (x + width > viewportWidth) {
-    width = viewportWidth - x;
+
+  // Ajuster Y
+  if (highlightY < minPadding) {
+    const overflow = minPadding - highlightY;
+    highlightY = minPadding;
+    highlightHeight = Math.max(targetRect.height, highlightHeight - overflow);
   }
-  
-  // Ajuster si l'encadrement dépasse en bas
-  if (y + height > viewportHeight) {
-    height = viewportHeight - y;
+  if (highlightY + highlightHeight > viewportHeight - minPadding) {
+    highlightHeight = viewportHeight - minPadding - highlightY;
   }
-  
+
+  // Assurer des dimensions minimales
+  highlightWidth = Math.max(40, highlightWidth);
+  highlightHeight = Math.max(30, highlightHeight);
+
   const highlightRect = {
-    x,
-    y,
-    width: Math.max(width, targetRect.width), // S'assurer qu'on ne réduit pas en dessous de la taille de l'élément
-    height: Math.max(height, targetRect.height),
+    x: highlightX,
+    y: highlightY,
+    width: highlightWidth,
+    height: highlightHeight,
   };
 
   const maskId = `tutorial-mask-${targetSelector?.replace(/[^a-zA-Z0-9]/g, '-') || 'default'}`;
@@ -123,7 +128,7 @@ export function TutorialHighlight({ targetSelector, show = true }: TutorialHighl
             />
           </mask>
         </defs>
-        <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.5)" mask={`url(#${maskId})`} />
+        <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.4)" mask={`url(#${maskId})`} />
       </svg>
       <div
         className="tutorial-highlight-box"

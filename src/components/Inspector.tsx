@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useScene } from '../hooks/useScene';
 import { Sphere, Box, Vec3, Color } from '../types/scene';
 import './Inspector.css';
@@ -11,21 +11,10 @@ interface InspectorProps {
 }
 
 export function Inspector({ isVisible, onToggle }: InspectorProps) {
-  const { 
-    scene, 
-    updateSphere, 
-    updateBox, 
-    updateCamera, 
-    getSelectedObject, 
-    deleteSelected, 
-    duplicateSelected, 
-    exportScene, 
-    importScene 
-  } = useScene();
+  const { scene, updateSphere, updateBox, updateCamera, getSelectedObject, deleteSelected, duplicateSelected, exportScene, importScene } = useScene();
   const [activeTab, setActiveTab] = useState<Tab>('object');
   const [codeValue, setCodeValue] = useState('');
   const [codeError, setCodeError] = useState<string | null>(null);
-  const objectControlsRef = useRef<HTMLDivElement | null>(null);
 
   const selectedObject = getSelectedObject();
 
@@ -71,19 +60,14 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
     }
   };
 
-  // Charger le code quand on change d'onglet
+  // Charger le code quand on change d'onglet ou que la scène change
   useEffect(() => {
     if (activeTab === 'code') {
       const json = exportScene();
       setCodeValue(json);
       setCodeError(null);
     }
-  }, [activeTab, exportScene]);
-
-  useEffect(() => {
-    if (!objectControlsRef.current || !selectedObject) return;
-    objectControlsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [selectedObject]);
+  }, [activeTab, exportScene, scene]);
 
   const handleApplyCode = () => {
     try {
@@ -92,20 +76,21 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
       if (!success) {
         setCodeError('Format JSON invalide. Vérifiez la structure de votre scène.');
       }
-    } catch (error) {
+    } catch {
       setCodeError('Erreur lors de l\'application du code. Vérifiez que le JSON est valide.');
     }
   };
 
+  // Bouton toggle quand l'inspector est masqué
   if (!isVisible) {
     return (
-      <button 
+      <button
         className="inspector-toggle-button"
         onClick={onToggle}
         title="Afficher l'inspecteur"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 18l6-6-6-6"/>
+          <path d="M15 18l-6-6 6-6"/>
         </svg>
       </button>
     );
@@ -113,15 +98,16 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
 
   return (
     <aside className="inspector">
-      <button 
+      <button
         className="inspector-close-button"
         onClick={onToggle}
         title="Masquer l'inspecteur"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M15 18l-6-6 6-6"/>
+          <path d="M9 18l6-6-6-6"/>
         </svg>
       </button>
+
       <div className="inspector-tabs">
         <button 
           className={`tab ${activeTab === 'object' ? 'active' : ''}`}
@@ -153,7 +139,7 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
         {activeTab === 'object' && (
           <>
             {selectedObject ? (
-              <div className="inspector-section" ref={objectControlsRef}>
+              <div className="inspector-section">
                 <h3 className="section-title">
                   {scene.selectedType === 'sphere' ? '● ' : '■ '}
                   {selectedObject.name}
@@ -280,7 +266,7 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
               <div className="slider-row">
                 <input 
                   type="range" 
-                  min="2" max="20" step="0.1"
+                  min="2.5" max="20" step="0.1"
                   value={scene.camera.distance}
                   onChange={(e) => updateCamera({ distance: parseFloat(e.target.value) })}
                 />
@@ -333,8 +319,16 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
                 <span className="shortcut-desc">Duplicate selected object</span>
               </div>
               <div className="shortcut-item">
+                <span className="shortcut-key">F</span>
+                <span className="shortcut-desc">Focus camera on object</span>
+              </div>
+              <div className="shortcut-item">
                 <span className="shortcut-key">Space</span>
                 <span className="shortcut-desc">Pause/Resume animation</span>
+              </div>
+              <div className="shortcut-item">
+                <span className="shortcut-key">Shift + Drag</span>
+                <span className="shortcut-desc">Precision gizmo movement</span>
               </div>
             </div>
 
@@ -345,50 +339,40 @@ export function Inspector({ isVisible, onToggle }: InspectorProps) {
                 <span className="shortcut-desc">Select object in viewport</span>
               </div>
               <div className="shortcut-item">
+                <span className="shortcut-key">Right-click</span>
+                <span className="shortcut-desc">Context menu (reset, focus)</span>
+              </div>
+              <div className="shortcut-item">
                 <span className="shortcut-key">Drag</span>
-                <span className="shortcut-desc">Rotate camera</span>
+                <span className="shortcut-desc">Rotate camera around object</span>
               </div>
               <div className="shortcut-item">
                 <span className="shortcut-key">Scroll</span>
                 <span className="shortcut-desc">Zoom in/out</span>
               </div>
               <div className="shortcut-item">
-                <span className="shortcut-key">Double-click</span>
-                <span className="shortcut-desc">Rename object (in sidebar)</span>
+                <span className="shortcut-key">Drag gizmo</span>
+                <span className="shortcut-desc">Move object on X/Y/Z axis</span>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'code' && (
-          <div className="inspector-section">
-            <h3 className="section-title">Code de la scène</h3>
-            <div className="code-editor-container">
-              <textarea
-                className="code-editor"
-                value={codeValue}
-                onChange={(e) => {
-                  setCodeValue(e.target.value);
-                  setCodeError(null);
-                }}
-                spellCheck={false}
-              />
-              {codeError && (
-                <div className="code-error">
-                  {codeError}
-                </div>
-              )}
-              <button 
-                className="code-apply-button"
-                onClick={handleApplyCode}
-              >
-                Appliquer les modifications
-              </button>
-            </div>
+          <div className="code-editor-container">
+            <textarea
+              className="code-editor"
+              value={codeValue}
+              onChange={(e) => setCodeValue(e.target.value)}
+              spellCheck="false"
+            />
+            {codeError && <div className="code-error">{codeError}</div>}
+            <button className="code-apply-button" onClick={handleApplyCode}>
+              Appliquer les modifications
+            </button>
           </div>
         )}
       </div>
     </aside>
   );
 }
-

@@ -39,7 +39,38 @@ export function SceneProvider({ children }: { children: ReactNode }) {
   const [scene, setScene] = useState<Scene>(createDefaultScene);
 
   const selectObject = useCallback((id: string | null, type: 'sphere' | 'box' | null) => {
-    setScene(prev => ({ ...prev, selectedId: id, selectedType: type }));
+    setScene(prev => {
+      // Mettre à jour le pivot caméra sur l'objet sélectionné
+      if (id && type) {
+        const obj = type === 'sphere' 
+          ? prev.spheres.find(s => s.id === id)
+          : prev.boxes.find(b => b.id === id);
+        if (obj) {
+          return {
+            ...prev,
+            selectedId: id,
+            selectedType: type,
+            camera: {
+              ...prev.camera,
+              target: { ...obj.position },
+            },
+          };
+        }
+      }
+      // Si désélection, remettre le pivot à l'origine
+      if (!id) {
+        return {
+          ...prev,
+          selectedId: null,
+          selectedType: null,
+          camera: {
+            ...prev.camera,
+            target: { x: 0, y: 0, z: 0 },
+          },
+        };
+      }
+      return { ...prev, selectedId: id, selectedType: type };
+    });
   }, []);
 
   const deleteSelected = useCallback(() => {

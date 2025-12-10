@@ -45,10 +45,7 @@ export function TopBar({ canvasRef, isPaused, onTogglePause, onExport, onImport,
     <header className="topbar">
       <div className="topbar-left">
         <div className="topbar-logo">
-          <div className="logo-placeholder">
-            <span className="logo-text">SE</span>
-          </div>
-          <span className="app-title">Scene Editor</span>
+          <img src="/site-logo.png" alt="Scene Editor" className="logo-image" />
         </div>
         <div className="topbar-status">
           <span className="status-dot status-ok" />

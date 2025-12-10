@@ -122,3 +122,65 @@
   white-space: nowrap;
 }
 
+/* Gizmo overlay hint */
+.viewport-overlay.gizmo-hint {
+  bottom: 12px;
+  right: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+}
+.gizmo-hint.gizmo-x {
+  border-color: #ff3333;
+  box-shadow: 0 0 12px rgba(255, 51, 51, 0.5), inset 0 0 8px rgba(255, 51, 51, 0.15);
+  color: #ff6666;
+}
+.gizmo-hint.gizmo-y {
+  border-color: #33ff33;
+  box-shadow: 0 0 12px rgba(51, 255, 51, 0.5), inset 0 0 8px rgba(51, 255, 51, 0.15);
+  color: #66ff66;
+}
+.gizmo-hint.gizmo-z {
+  border-color: #3399ff;
+  box-shadow: 0 0 12px rgba(51, 153, 255, 0.5), inset 0 0 8px rgba(51, 153, 255, 0.15);
+  color: #66b3ff;
+}
+
+/* Context menu */
+.viewport-context-menu {
+  position: absolute;
+  background: rgba(25, 25, 28, 0.96);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1200;
+  min-width: 160px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.viewport-context-menu button {
+  background: none;
+  color: inherit;
+  border: none;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.viewport-context-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+

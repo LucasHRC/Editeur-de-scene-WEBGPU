@@ -23,6 +23,13 @@
   font-size: 14px;
 }
 
+.logo-image {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
 .logo-placeholder {
   width: 28px;
   height: 28px;

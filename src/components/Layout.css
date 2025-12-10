@@ -10,11 +10,21 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 .layout-viewport {
   flex: 1;
   overflow: hidden;
   background: #000;
+  min-width: 0; /* Evite débordement flexbox */
+}
+
+/* Z-index hierarchy */
+:root {
+  --z-overlay: 1000;
+  --z-inspector-toggle: 1100;
+  --z-context-menu: 1200;
+  --z-tutorial: 1300;
 }
 

@@ -47,8 +47,10 @@ struct SceneData {
   boxes: array<Box, 8>,
   // params: x=numSpheres, y=numBoxes, z=fov, w=unused
   params: vec4<f32>,
-  // camera: x=pitch, y=yaw, z=distance, w=targetY
+  // camera: x=pitch, y=yaw, z=distance, w=pad
   camera: vec4<f32>,
+  // camera_target: xyz=target position, w=pad
+  camera_target: vec4<f32>,
   // selection: x=type (-1=none, 0=sphere, 1=box), y=index, z/w=unused
   selection: vec4<f32>,
   // gizmo position (for selected object)
@@ -78,13 +80,13 @@ fn fs_main(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
   let pitch = scene.camera.x;
   let yaw = scene.camera.y;
   let cam_dist = scene.camera.z;
-  let target_y = scene.camera.w;
+  let cam_target = scene.camera_target.xyz;
 
-  let cam_target = vec3<f32>(0.0, target_y, 0.0);
+  // Position caméra relative au target
   let cam_pos = vec3<f32>(
-    sin(yaw) * cos(pitch) * cam_dist,
-    sin(pitch) * cam_dist + target_y,
-    cos(yaw) * cos(pitch) * cam_dist
+    sin(yaw) * cos(pitch) * cam_dist + cam_target.x,
+    sin(pitch) * cam_dist + cam_target.y,
+    cos(yaw) * cos(pitch) * cam_dist + cam_target.z
   );
 
   // Camera matrix
@@ -165,10 +167,10 @@ fn gamma_correct(color: vec3<f32>) -> vec3<f32> {
 }
 
 fn get_material_color(mat_id: f32, p: vec3<f32>) -> vec3<f32> {
-  // Gizmo colors
-  if mat_id == MAT_GIZMO_X { return vec3<f32>(1.0, 0.2, 0.2); }
-  if mat_id == MAT_GIZMO_Y { return vec3<f32>(0.2, 1.0, 0.2); }
-  if mat_id == MAT_GIZMO_Z { return vec3<f32>(0.2, 0.4, 1.0); }
+  // Gizmo colors - couleurs vives et distinctes
+  if mat_id == MAT_GIZMO_X { return vec3<f32>(1.0, 0.15, 0.15); }  // Rouge vif
+  if mat_id == MAT_GIZMO_Y { return vec3<f32>(0.15, 1.0, 0.15); }  // Vert vif
+  if mat_id == MAT_GIZMO_Z { return vec3<f32>(0.15, 0.4, 1.0); }   // Bleu vif
 
   // Ground plane (checkerboard)
   if mat_id == MAT_PLANE {
@@ -259,16 +261,18 @@ fn get_dist(p: vec3<f32>) -> vec2<f32> {
   // Gizmo (if object selected)
   if scene.selection.x >= 0.0 {
     let gizmo_center = scene.gizmo_pos.xyz;
-    let gizmo_scale = 0.8;
-    let axis_len = 0.6 * gizmo_scale;
-    let axis_r = 0.03 * gizmo_scale;
-    let cone_h = 0.15 * gizmo_scale;
-    let cone_r = 0.06 * gizmo_scale;
+    // Gizmo plus large pour meilleure visibilité et saisie
+    let gizmo_scale = 1.5;
+    let axis_len = 1.0 * gizmo_scale;
+    let axis_r = 0.07 * gizmo_scale;
+    let cone_h = 0.28 * gizmo_scale;
+    let cone_r = 0.12 * gizmo_scale;
 
-    // X axis (red)
+    // X axis (red) - cylindre le long de +X
     let px = p - gizmo_center;
-    let dx_cyl = sd_cylinder(px.zyx - vec3<f32>(0.0, axis_len * 0.5, 0.0), axis_len * 0.5, axis_r);
-    let dx_cone = sd_cone(px.zyx - vec3<f32>(0.0, axis_len, 0.0), cone_h, cone_r);
+    let px_x = px.yxz;  // Swap x et y pour orienter le cylindre le long de X
+    let dx_cyl = sd_cylinder(px_x - vec3<f32>(0.0, axis_len * 0.5, 0.0), axis_len * 0.5, axis_r);
+    let dx_cone = sd_cone(px_x - vec3<f32>(0.0, axis_len, 0.0), cone_h, cone_r);
     let dx = min(dx_cyl, dx_cone);
     if dx < res.x { res = vec2<f32>(dx, MAT_GIZMO_X); }
 
